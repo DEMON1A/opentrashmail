@@ -9,6 +9,7 @@ import ConfigParser
 import time
 import os, sys
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class CustomSMTPServer(smtpd.SMTPServer):
             logger.debug('Message addressed from: %s' % mailfrom)
             logger.debug('Message addressed to: %s' % str(rcpttos))
 
-            
+
 
             msg = email.message_from_string(data)
             subject = ''
@@ -73,7 +74,7 @@ class CustomSMTPServer(smtpd.SMTPServer):
 
             body = '\n'.join(text_parts)
             htmlbody = '\n'.join(html_parts)
-            
+
         except:
             logger.exception('Error reading incoming email')
         else:
@@ -91,9 +92,12 @@ class CustomSMTPServer(smtpd.SMTPServer):
 
             for em in rcpttos:
                 em = em.lower()
+                if not re.search(r'^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$', em):
+                    break
+
                 if not os.path.exists("../data/"+em):
                     os.mkdir( "../data/"+em, 0755 )
-                
+
                 #same attachments if any
                 for att in attachments:
                     if not os.path.exists("../data/"+em+"/attachments"):
@@ -127,7 +131,7 @@ if __name__ == '__main__':
         Config.read("../config.ini")
         port = int(Config.get("MAILSERVER","MAILPORT"))
 
-    
+
 
     print "[i] Starting Mailserver on port",port
 
